@@ -9,7 +9,7 @@ SCREEN_HEIGHT = 600
 
 #create game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Jumpy')
+pygame.display.set_caption('Bitlandia')
 
 #game loop
 run = True
