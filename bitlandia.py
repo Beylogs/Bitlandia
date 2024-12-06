@@ -53,7 +53,6 @@ platform_image = pygame.image.load('assets/images/platform/tilemap2.png').conver
 bird_sheet_img = pygame.image.load('assets/images/enemy/bird.png').convert_alpha()
 bird_sheet = SpriteSheet(bird_sheet_img)
 
-
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
@@ -69,7 +68,6 @@ def draw_panel():
 def draw_bg(bg_scroll):
 	screen.blit(bg_image, (0, 0 + bg_scroll))
 	screen.blit(bg_image, (0, -600 + bg_scroll))
-
 
 #player class
 class Player():
@@ -107,7 +105,6 @@ class Player():
 		if self.rect.right + dx > SCREEN_WIDTH:
 			dx = SCREEN_WIDTH - self.rect.right
 
-
 		#check collision with platforms
 		for platform in platform_group:
 			#collision in the y direction
@@ -133,10 +130,7 @@ class Player():
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
-		pygame.draw.rect(screen, WHITE, self.rect, 2)
 		
-  
-
 #platform class
 class Platform(pygame.sprite.Sprite):
 	def __init__(self, x, y, width, moving):
@@ -269,7 +263,6 @@ while run:
 				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
 				platform_group.add(platform)
 
-
 	#event handler
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -280,9 +273,7 @@ while run:
 					file.write(str(high_score))
 			run = False
 
-
 	#update display window
 	pygame.display.update()
-
 
 pygame.quit()
