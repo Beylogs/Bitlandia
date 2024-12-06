@@ -40,7 +40,7 @@ def draw_bg(bg_scroll):
 #player class
 class Player():
 	def __init__(self, x, y):
-		self.image = pygame.transform.scale(bitlandia_image, (45, 45))
+		self.image = pygame.transform.scale(jumpy_image, (45, 45))
 		self.width = 25
 		self.height = 40
 		self.rect = pygame.Rect(0, 0, self.width, self.height)
@@ -50,6 +50,7 @@ class Player():
 
 	def move(self):
 		#reset variables
+		scroll = 0
 		dx = 0
 		dy = 0
 
@@ -91,13 +92,22 @@ class Player():
 			self.vel_y = -20
 
 
+		#check if the player has bounced to the top of the screen
+		if self.rect.top <= SCROLL_THRESH:
+			#if player is jumping
+			if self.vel_y < 0:
+				scroll = -dy
+
 		#update rectangle position
 		self.rect.x += dx
-		self.rect.y += dy
+		self.rect.y += dy + scroll
+
+		return scroll
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
 		pygame.draw.rect(screen, WHITE, self.rect, 2)
+		
 
 #platform class
 class Platform(pygame.sprite.Sprite):
