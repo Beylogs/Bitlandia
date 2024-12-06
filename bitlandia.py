@@ -14,7 +14,7 @@ pygame.display.set_caption('Bitlandia')
 
 #set frame rate
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 70
 
 #game variables
 GRAVITY = 1
