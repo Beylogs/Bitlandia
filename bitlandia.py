@@ -19,7 +19,7 @@ FPS = 70
 #game variables
 SCROLL_THRESH = 200
 GRAVITY = 1
-MAX_PLATFORMS = 20
+MAX_PLATFORMS = 10
 scroll = 0
 bg_scroll = 0
 
@@ -108,6 +108,15 @@ class Platform(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+	def update(self, scroll):
+
+		#update platform's vertical position
+		self.rect.y += scroll
+
+		#check if platform has gone off the screen
+		if self.rect.top > SCREEN_HEIGHT:
+			self.kill()
+
 bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 
 #create sprite groups
@@ -127,7 +136,7 @@ while run:
 
 	clock.tick(FPS)
 
-	scroll = jumpy.move()
+	scroll = bitlandia.move()
 
 	#draw background
 	bg_scroll += scroll
@@ -135,15 +144,20 @@ while run:
 		bg_scroll = 0
 	draw_bg(bg_scroll)
 
-	#draw temporary scroll threshold
-	pygame.draw.line(screen, WHITE, (0, SCROLL_THRESH), (SCREEN_WIDTH, SCROLL_THRESH))
+	#generate platforms
+	if len(platform_group) < MAX_PLATFORMS:
+		p_w = random.randint(40, 60)
+		p_x = random.randint(0, SCREEN_WIDTH - p_w)
+		p_y = platform.rect.y - random.randint(80, 120)
+		platform = Platform(p_x, p_y, p_w)
+		platform_group.add(platform)
 
 	#update platforms
 	platform_group.update(scroll)
 
 	#draw sprites
 	platform_group.draw(screen)
-	jumpy.draw()
+	bitlandia.draw()
 
 
 	#event handler
