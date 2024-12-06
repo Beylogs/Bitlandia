@@ -1,12 +1,9 @@
 #importy
 import pygame
-<<<<<<< Updated upstream
-=======
 import random
 import os
 from spritesheet import SpriteSheet
 from enemy import Enemy
->>>>>>> Stashed changes
 
 #initialise pygame
 pygame.init()
@@ -19,8 +16,6 @@ SCREEN_HEIGHT = 700
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Bitlandia')
 
-<<<<<<< Updated upstream
-=======
 #set frame rate
 clock = pygame.time.Clock()
 FPS = 70
@@ -184,13 +179,10 @@ enemy_group = pygame.sprite.Group()
 platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
 platform_group.add(platform)
 
->>>>>>> Stashed changes
 #game loop
 run = True
 while run:
 
-<<<<<<< Updated upstream
-=======
 	clock.tick(FPS)
 
 	if game_over == False:
@@ -278,7 +270,6 @@ while run:
 				platform_group.add(platform)
 
 
->>>>>>> Stashed changes
 	#event handler
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
