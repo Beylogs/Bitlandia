@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 #initialise pygame
 pygame.init()
@@ -26,9 +27,16 @@ game_over = False
 score = 0
 fade_counter = 0
 
+if os.path.exists('score.txt'):
+	with open('score.txt', 'r') as file:
+		high_score = int(file.read())
+else:
+	high_score = 0
+
 #define colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+PANEL = (153, 217, 234)
 
 #define font
 font_small = pygame.font.SysFont('Lucida Sans', 20)
@@ -43,6 +51,12 @@ platform_image = pygame.image.load('assets/images/platform/tilemap2.png').conver
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
 	screen.blit(img, (x, y))
+
+#function for drawing info panel
+def draw_panel():
+	pygame.draw.rect(screen, PANEL, (0, 0, SCREEN_WIDTH, 30))
+	pygame.draw.line(screen, WHITE, (0, 30), (SCREEN_WIDTH, 30), 2)
+	draw_text('SCORE: ' + str(score), font_small, WHITE, 0, 0)
 
 #function for drawing the background
 def draw_bg(bg_scroll):
@@ -168,9 +182,20 @@ while run:
 		#update platforms
 		platform_group.update(scroll)
 
+		#update score
+		if scroll > 0:
+			score += scroll
+
+		#draw line at previous high score
+		pygame.draw.line(screen, WHITE, (0, score - high_score + SCROLL_THRESH), (SCREEN_WIDTH, score - high_score + SCROLL_THRESH), 3)
+		draw_text('HIGH SCORE', font_small, WHITE, SCREEN_WIDTH - 130, score - high_score + SCROLL_THRESH)
+
 		#draw sprites
 		platform_group.draw(screen)
 		bitlandia.draw()
+
+		#draw panel
+		draw_panel()
 
 		#check game over
 		if bitlandia.rect.top > SCREEN_HEIGHT:
@@ -181,28 +206,39 @@ while run:
 			for y in range(0, 6, 2):
 				pygame.draw.rect(screen, BLACK, (0, y * 100, fade_counter, 100))
 				pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH - fade_counter, (y + 1) * 100, SCREEN_WIDTH, 100))
-		draw_text('GAME OVER!', font_big, WHITE, 130, 200)
-		draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
-		draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
-		key = pygame.key.get_pressed()
-		if key[pygame.K_SPACE]:
-			#reset variables
-			game_over = False
-			score = 0
-			scroll = 0
-			fade_counter = 0
-			#reposition jumpy
-			bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
-			#reset platforms
-			platform_group.empty()
-			#create starting platform
-			platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
-			platform_group.add(platform)
+		else:
+			draw_text('GAME OVER!', font_big, WHITE, 130, 200)
+			draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
+			draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
+			#update high score
+			if score > high_score:
+				high_score = score
+				with open('score.txt', 'w') as file:
+					file.write(str(high_score))
+			key = pygame.key.get_pressed()
+			if key[pygame.K_SPACE]:
+				#reset variables
+				game_over = False
+				score = 0
+				scroll = 0
+				fade_counter = 0
+				#reposition bitlandia
+				bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+				#reset platforms
+				platform_group.empty()
+				#create starting platform
+				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+				platform_group.add(platform)
 
 
 	#event handler
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
+			#update high score
+			if score > high_score:
+				high_score = score
+				with open('score.txt', 'w') as file:
+					file.write(str(high_score))
 			run = False
 
 
