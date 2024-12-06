@@ -1,4 +1,5 @@
 import pygame
+import random
 
 #initialise pygame
 pygame.init()
@@ -13,18 +14,19 @@ pygame.display.set_caption('Bitlandia')
 
 #set frame rate
 clock = pygame.time.Clock()
-FPS = 70
+FPS = 60
 
 #game variables
 GRAVITY = 1
+MAX_PLATFORMS = 10
 
 #define colours
 WHITE = (255, 255, 255)
 
 #load images
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
-#load images
 bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
+platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
 
 #player class
 class Player():
@@ -61,10 +63,24 @@ class Player():
 		if self.rect.right + dx > SCREEN_WIDTH:
 			dx = SCREEN_WIDTH - self.rect.right
 
+
+		#check collision with platforms
+		for platform in platform_group:
+			#collision in the y direction
+			if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+				#check if above the platform
+				if self.rect.bottom < platform.rect.centery:
+					if self.vel_y > 0:
+						self.rect.bottom = platform.rect.top
+						dy = 0
+						self.vel_y = -20
+
+
 		#check collision with ground
 		if self.rect.bottom + dy > SCREEN_HEIGHT:
 			dy = 0
 			self.vel_y = -20
+
 
 		#update rectangle position
 		self.rect.x += dx
@@ -74,7 +90,27 @@ class Player():
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
 		pygame.draw.rect(screen, WHITE, self.rect, 2)
 
+#platform class
+class Platform(pygame.sprite.Sprite):
+	def __init__(self, x, y, width):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.transform.scale(platform_image, (width, 10))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+
 bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+
+#create sprite groups
+platform_group = pygame.sprite.Group()
+
+#create temporary platforms
+for p in range(MAX_PLATFORMS):
+	p_w = random.randint(40, 60)
+	p_x = random.randint(0, SCREEN_WIDTH - p_w)
+	p_y = p * random.randint(80, 120)
+	platform = Platform(p_x, p_y, p_w)
+	platform_group.add(platform)
 
 #game loop
 run = True
@@ -88,6 +124,7 @@ while run:
 	screen.blit(bg_image, (0, 0))
 
 	#draw sprites
+	platform_group.draw(screen)
 	bitlandia.draw()
 
 	#event handler
