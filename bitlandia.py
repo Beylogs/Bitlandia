@@ -1,6 +1,11 @@
+#import
 import pygame
 import random
 import os
+
+from spritesheet import SpriteSheet
+from enemy import Enemy
+
 
 #initialise pygame
 pygame.init()
@@ -46,6 +51,12 @@ font_big = pygame.font.SysFont('Lucida Sans', 24)
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
 bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
 platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
+
+#bird spritesheet
+bird_sheet_img = pygame.image.load('assets/images/enemy/bird.png').convert_alpha()
+bird_sheet = SpriteSheet(bird_sheet_img)
+
+
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -129,16 +140,41 @@ class Player():
 		pygame.draw.rect(screen, WHITE, self.rect, 2)
 		
 
+  
+
+#platform class
+class Platform(pygame.sprite.Sprite):
+	def __init__(self, x, y, width, moving):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.transform.scale(platform_image, (width, 10))
+		self.moving = moving
+		self.move_counter = random.randint(0, 50)
+		self.direction = random.choice([-1, 1])
+		self.speed = random.randint(1, 2)
+
+
 #platform class
 class Platform(pygame.sprite.Sprite):
 	def __init__(self, x, y, width):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.transform.scale(platform_image, (width, 10))
+
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
 
 	def update(self, scroll):
+
+		#moving platform side to side if it is a moving platform
+		if self.moving == True:
+				self.move_counter +=1
+				self.rect.x += self.direction * self.speed
+
+		#change the platform direction if it has moved fully hit a wall
+		if self.move_counter >= 100 or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+				self.direction *= -1
+				self.move_counter - 0
+  
 
 		#update platform's vertical position
 		self.rect.y += scroll
@@ -147,13 +183,23 @@ class Platform(pygame.sprite.Sprite):
 		if self.rect.top > SCREEN_HEIGHT:
 			self.kill()
 
+
+#player instance
+
 bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 
 #create sprite groups
 platform_group = pygame.sprite.Group()
 
+enemy_group = pygame.sprite.Group()
+
+#create starting platform
+platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
+
+
 #create starting platform
 platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+
 platform_group.add(platform)
 
 #game loop
@@ -176,11 +222,30 @@ while run:
 			p_w = random.randint(40, 60)
 			p_x = random.randint(0, SCREEN_WIDTH - p_w)
 			p_y = platform.rect.y - random.randint(80, 120)
+
+			p_type = random.randint(1, 2)
+			if p_type == 1 and score > 500:
+					p_moving = True
+			else:
+					p_moving = False
+			platform = Platform(p_x, p_y, p_w, p_moving)
+
 			platform = Platform(p_x, p_y, p_w)
+
 			platform_group.add(platform)
 
 		#update platforms
 		platform_group.update(scroll)
+
+
+		#generate enimies
+		if len(enemy_group) == 0 and score > 1500:
+				enemy = Enemy(SCREEN_WIDTH, 100, bird_sheet, 1.5)
+				enemy_group.add(enemy)
+    
+		#update enemy
+		enemy_group.update(scroll, SCREEN_WIDTH)
+  
 
 		#update score
 		if scroll > 0:
@@ -192,6 +257,9 @@ while run:
 
 		#draw sprites
 		platform_group.draw(screen)
+
+		enemy_group.draw(screen)
+
 		bitlandia.draw()
 
 		#draw panel
@@ -224,10 +292,19 @@ while run:
 				fade_counter = 0
 				#reposition bitlandia
 				bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+
+				#reset enemies
+				enemy_group.empty()
+				#reset platforms
+				platform_group.empty()
+				#create starting platform
+				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
+
 				#reset platforms
 				platform_group.empty()
 				#create starting platform
 				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+
 				platform_group.add(platform)
 
 
