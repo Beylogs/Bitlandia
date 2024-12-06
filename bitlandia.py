@@ -17,8 +17,11 @@ clock = pygame.time.Clock()
 FPS = 70
 
 #game variables
+SCROLL_THRESH = 200
 GRAVITY = 1
-MAX_PLATFORMS = 10
+MAX_PLATFORMS = 20
+scroll = 0
+bg_scroll = 0
 
 #define colours
 WHITE = (255, 255, 255)
@@ -27,6 +30,12 @@ WHITE = (255, 255, 255)
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
 bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
 platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
+
+#function for drawing the background
+def draw_bg(bg_scroll):
+	screen.blit(bg_image, (0, 0 + bg_scroll))
+	screen.blit(bg_image, (0, -600 + bg_scroll))
+
 
 #player class
 class Player():
@@ -118,19 +127,30 @@ while run:
 
 	clock.tick(FPS)
 
-	bitlandia.move()
+	scroll = jumpy.move()
 
 	#draw background
-	screen.blit(bg_image, (0, 0))
+	bg_scroll += scroll
+	if bg_scroll >= 600:
+		bg_scroll = 0
+	draw_bg(bg_scroll)
+
+	#draw temporary scroll threshold
+	pygame.draw.line(screen, WHITE, (0, SCROLL_THRESH), (SCREEN_WIDTH, SCROLL_THRESH))
+
+	#update platforms
+	platform_group.update(scroll)
 
 	#draw sprites
 	platform_group.draw(screen)
-	bitlandia.draw()
+	jumpy.draw()
+
 
 	#event handler
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
+
 
 	#update display window
 	pygame.display.update()
