@@ -15,7 +15,7 @@ pygame.display.set_caption('Bitlandia')
 
 #set frame rate
 clock = pygame.time.Clock()
-FPS = 70
+FPS = 60
 
 #game variables
 SCROLL_THRESH = 200
@@ -131,14 +131,27 @@ class Player():
 
 #platform class
 class Platform(pygame.sprite.Sprite):
-	def __init__(self, x, y, width):
+	def __init__(self, x, y, width, moving):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.transform.scale(platform_image, (width, 10))
+		self.moving = moving
+		self.move_counter = random.randint(0, 50)
+		self.direction = random.choice([-1, 1])
+		self.speed = random.randint(1, 2)
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
 
 	def update(self, scroll):
+		#moving platform side to side if it is a moving platform
+		if self.moving == True:
+			self.move_counter += 1
+			self.rect.x += self.direction * self.speed
+
+		#change platform direction if it has moved fully or hit a wall
+		if self.move_counter >= 100 or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+			self.direction *= -1
+			self.move_counter = 0
 
 		#update platform's vertical position
 		self.rect.y += scroll
@@ -176,7 +189,12 @@ while run:
 			p_w = random.randint(40, 60)
 			p_x = random.randint(0, SCREEN_WIDTH - p_w)
 			p_y = platform.rect.y - random.randint(80, 120)
-			platform = Platform(p_x, p_y, p_w)
+			p_type = random.randint(1, 2)
+			if p_type == 1 and score > 500:
+				p_moving = True
+			else:
+				p_moving = False
+			platform = Platform(p_x, p_y, p_w, p_moving)
 			platform_group.add(platform)
 
 		#update platforms
@@ -222,12 +240,12 @@ while run:
 				score = 0
 				scroll = 0
 				fade_counter = 0
-				#reposition bitlandia
+				#reposition jumpy
 				bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 				#reset platforms
 				platform_group.empty()
 				#create starting platform
-				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
 				platform_group.add(platform)
 
 
@@ -240,10 +258,6 @@ while run:
 				with open('score.txt', 'w') as file:
 					file.write(str(high_score))
 			run = False
-
-
-	#update display window
-	pygame.display.update()
 
 
 pygame.quit()
