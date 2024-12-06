@@ -2,9 +2,9 @@
 import pygame
 import random
 import os
-from pygame import mixer
 from spritesheet import SpriteSheet
 from enemy import Enemy
+
 
 #initialize pygame
 pygame.init()
@@ -59,9 +59,11 @@ font_big = pygame.font.SysFont('Lucida Sans', 24)
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
 bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
 platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
+
 #bird spritesheet
 bird_sheet_img = pygame.image.load('assets/images/enemy/bird.png').convert_alpha()
 bird_sheet = SpriteSheet(bird_sheet_img)
+
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -142,45 +144,60 @@ class Player():
 
         return scroll
 
-    def draw(self):
-        screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
+	def draw(self):
+		screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
+		pygame.draw.rect(screen, WHITE, self.rect, 2)
+		
+  
 
 #platform class
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, moving):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.scale(platform_image, (width, 10))
-        self.moving = moving
-        self.move_counter = random.randint(0, 50)  # Random start point for movement
-        self.direction = random.choice([-1, 1])  # Direction the platform is moving (-1 for left, 1 for right)
-        self.speed = random.randint(1, 2)  # Speed of movement
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+	def __init__(self, x, y, width, moving):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.transform.scale(platform_image, (width, 10))
+		self.moving = moving
+		self.move_counter = random.randint(0, 50)
+		self.direction = random.choice([-1, 1])
+		self.speed = random.randint(1, 2)
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
 
-    def update(self, scroll):
-        # If platform is moving, update its position
-        if self.moving:
-            self.rect.x += self.direction * self.speed  # Move horizontally
-            if self.rect.left <= 0 or self.rect.right >= SCREEN_WIDTH:
-                self.direction *= -1  # Reverse direction at edges
+	def update(self, scroll):
+		#moving platform side to side if it is a moving platform
+		if self.moving == True:
+				self.move_counter +=1
+				self.rect.x += self.direction * self.speed
 
-        # Update platform's vertical position
-        self.rect.y += scroll
+		#change the platform direction if it has moved fully hit a wall
+		if self.move_counter >= 100 or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+				self.direction *= -1
+				self.move_counter - 0
+  
+		#update platform's vertical position
+		self.rect.y += scroll
 
         # Remove platform if it goes off-screen
         if self.rect.top > SCREEN_HEIGHT:
             self.kill()
 
+
 #player instance
+
 bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 
 #create sprite groups
 platform_group = pygame.sprite.Group()
+
 enemy_group = pygame.sprite.Group()
 
 #create starting platform
 platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
+
+
+#create starting platform
+platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+
 platform_group.add(platform)
 
 #game loop
@@ -198,86 +215,80 @@ while run:
             bg_scroll = 0
         draw_bg(bg_scroll)
 
-        #generate platforms
-        if len(platform_group) < MAX_PLATFORMS:
-            p_w = random.randint(40, 60)
-            p_x = random.randint(0, SCREEN_WIDTH - p_w)
-            p_y = platform.rect.y - random.randint(80, 120)
-            p_type = random.randint(1, 2)
-            if p_type == 1 and score > 500:
-                p_moving = True
-            else:
-                p_moving = False
-            platform = Platform(p_x, p_y, p_w, p_moving)
-            platform_group.add(platform)
+		#generate platforms
+		if len(platform_group) < MAX_PLATFORMS:
+			p_w = random.randint(40, 60)
+			p_x = random.randint(0, SCREEN_WIDTH - p_w)
+			p_y = platform.rect.y - random.randint(80, 120)
+			p_type = random.randint(1, 2)
+			if p_type == 1 and score > 500:
+					p_moving = True
+			else:
+					p_moving = False
+			platform = Platform(p_x, p_y, p_w, p_moving)
+			platform_group.add(platform)
 
-        #update platforms
-        platform_group.update(scroll)
+		#update platforms
+		platform_group.update(scroll)
 
         #generate enemies
         if len(enemy_group) == 0 and score > 1500:
             enemy = Enemy(SCREEN_WIDTH, 100, bird_sheet, 1.5)
             enemy_group.add(enemy)
     
-        #update enemy
-        enemy_group.update(scroll, SCREEN_WIDTH)
-    
-        #update score
-        if scroll > 0:
-            score += scroll
+		#update enemy
+		enemy_group.update(scroll, SCREEN_WIDTH)
+  
+		#update score
+		if scroll > 0:
+			score += scroll
 
         #draw line at previous high score
         pygame.draw.line(screen, WHITE, (0, score - high_score + SCROLL_THRESH), (SCREEN_WIDTH, score - high_score + SCROLL_THRESH), 3)
         draw_text('HIGH SCORE', font_small, WHITE, SCREEN_WIDTH - 130, score - high_score + SCROLL_THRESH)
 
-        #draw sprites
-        platform_group.draw(screen)
-        enemy_group.draw(screen)
-        bitlandia.draw()
+		#draw sprites
+		platform_group.draw(screen)
+		enemy_group.draw(screen)
+		bitlandia.draw()
 
         #draw panel
         draw_panel()
 
-        #check game over
-        if bitlandia.rect.top > SCREEN_HEIGHT:
-            game_over = True
-            death_fx.play()
-        #check for collision with enemies
-        if pygame.sprite.spritecollide(bitlandia, enemy_group, False):
-            if pygame.sprite.spritecollide(bitlandia, enemy_group, False, pygame.sprite.collide_mask):
-                game_over = True
-                death_fx.play()
-    else:
-        if fade_counter < SCREEN_WIDTH:
-            fade_counter += 5
-            for y in range(0, 6, 2):
-                pygame.draw.rect(screen, BLACK, (0, y * 100, fade_counter, 100))
-                pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH - fade_counter, (y + 1) * 100, SCREEN_WIDTH, 100))
-        else:
-            draw_text('GAME OVER!', font_big, WHITE, 130, 200)
-            draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
-            draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
-            #update high score
-            if score > high_score:
-                high_score = score
-                with open('score.txt', 'w') as file:
-                    file.write(str(high_score))
-            key = pygame.key.get_pressed()
-            if key[pygame.K_SPACE]:
-                #reset variables
-                game_over = False
-                score = 0
-                scroll = 0
-                fade_counter = 0
-                #reposition bitlandia
-                bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
-                #reset enemies
-                enemy_group.empty()
-                #reset platforms
-                platform_group.empty()
-                #create starting platform
-                platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
-                platform_group.add(platform)
+		#check game over
+		if bitlandia.rect.top > SCREEN_HEIGHT:
+			game_over = True
+	else:
+		if fade_counter < SCREEN_WIDTH:
+			fade_counter += 5
+			for y in range(0, 6, 2):
+				pygame.draw.rect(screen, BLACK, (0, y * 100, fade_counter, 100))
+				pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH - fade_counter, (y + 1) * 100, SCREEN_WIDTH, 100))
+		else:
+			draw_text('GAME OVER!', font_big, WHITE, 130, 200)
+			draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
+			draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
+			#update high score
+			if score > high_score:
+				high_score = score
+				with open('score.txt', 'w') as file:
+					file.write(str(high_score))
+			key = pygame.key.get_pressed()
+			if key[pygame.K_SPACE]:
+				#reset variables
+				game_over = False
+				score = 0
+				scroll = 0
+				fade_counter = 0
+				#reposition bitlandia
+				bitlandia.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+				#reset enemies
+				enemy_group.empty()
+				#reset platforms
+				platform_group.empty()
+				#create starting platform
+				platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
+				platform_group.add(platform)
 
     #event handler
     for event in pygame.event.get():
