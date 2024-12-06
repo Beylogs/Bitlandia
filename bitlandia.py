@@ -1,4 +1,4 @@
-#importy
+#import
 import pygame
 import random
 import os
@@ -9,8 +9,8 @@ from enemy import Enemy
 pygame.init()
 
 #game window dimensions
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 600
 
 #create game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -273,7 +273,16 @@ while run:
 	#event handler
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
+			#update high score
+			if score > high_score:
+				high_score = score
+				with open('score.txt', 'w') as file:
+					file.write(str(high_score))
 			run = False
+
+
+	#update display window
+	pygame.display.update()
 
 
 pygame.quit()
