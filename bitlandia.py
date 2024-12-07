@@ -22,13 +22,17 @@ clock = pygame.time.Clock()
 FPS = 70
 
 #load music and sounds
-pygame.mixer.music.load('assets/music/music.mp3')
+pygame.mixer.music.load('assets/music/backgrounMusic.mp3')
 pygame.mixer.music.set_volume(0.6)
 pygame.mixer.music.play(-1, 0.0)
 jump_fx = pygame.mixer.Sound('assets/music/jump.mp3')
 jump_fx.set_volume(0.5)
 death_fx = pygame.mixer.Sound('assets/music/death.mp3')
 death_fx.set_volume(0.5)
+score_item_fx = pygame.mixer.Sound('assets/music/scoreItem.wav')  # Load score item sound effect
+score_item_fx.set_volume(0.5)  # Adjust volume as needed
+super_jump_item_fx = pygame.mixer.Sound('assets/music/superjumpItem.wav')  # Load super jump sound effect
+super_jump_item_fx.set_volume(0.5)  # Adjust volume as needed
 
 #game variables
 SCROLL_THRESH = 200
@@ -37,6 +41,7 @@ MAX_PLATFORMS = 10
 scroll = 0
 bg_scroll = 0
 game_over = False
+start_game = True
 score = 0
 fade_counter = 0
 
@@ -62,7 +67,7 @@ font_big = pygame.font.SysFont('Lucida Sans', 24)
 
 #load images
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
-bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
+bg_image = pygame.image.load('assets/images/background/bgta.png').convert_alpha()
 platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
 item_image = pygame.image.load('assets/images/item/score.png').convert_alpha()
 super_jump_image = pygame.image.load('assets/images/item/super jump.png').convert_alpha()
@@ -76,16 +81,24 @@ def draw_text(text, font, text_col, x, y):
     screen.blit(img, (x, y))
 
 #function for drawing info panel
+# Function for drawing info panel
 def draw_panel():
-    pygame.draw.rect(screen, PANEL, (0, 0, SCREEN_WIDTH, 30))
+    pygame.draw.rect(screen,BLACK, (0, 0, SCREEN_WIDTH, 30))
     pygame.draw.line(screen, WHITE, (0, 30), (SCREEN_WIDTH, 30), 2)
     draw_text('SCORE: ' + str(score), font_small, WHITE, 0, 0)
 
     # Display multiplier and super jump status
     if score_multiplier > 1:
-        draw_text('2x SCORE', font_small, WHITE, SCREEN_WIDTH - 150, 0)
+        # Draw "2x SCORE" text
+        draw_text('2x SCORE', font_small, WHITE, SCREEN_WIDTH - 200, 0)
+
+        # Adjusted font size for multiplier timer and position it next to "2x SCORE"
+        font_timer = pygame.font.SysFont('Lucida Sans', 18)  # Smaller font size
+        # Adjust position to be just to the right of "2x SCORE"
+        draw_text(f'TIMER: {multiplier_timer // 60}', font_timer, WHITE, SCREEN_WIDTH - 75, 0)  # Adjusted position
+
     if super_jump_active:
-        draw_text('SUPER JUMP READY!', font_small, WHITE, SCREEN_WIDTH - 150, 20)
+        draw_text('SUPER JUMP READY!', font_small, WHITE, SCREEN_WIDTH - 220, 20)
 
 #function for drawing the background
 def draw_bg(bg_scroll):
@@ -113,10 +126,10 @@ class Player():
 
         #process keypresses
         key = pygame.key.get_pressed()
-        if key[pygame.K_a]:
+        if key[pygame.K_LEFT]:
             dx = -10
             self.flip = True
-        if key[pygame.K_d]:
+        if key[pygame.K_RIGHT]:
             dx = 10
             self.flip = False
 
@@ -216,9 +229,39 @@ class SuperJumpItem(pygame.sprite.Sprite):
         self.rect.y += scroll
         if self.rect.top > SCREEN_HEIGHT:
             self.kill()
+            
+class StartButton():
+    def __init__(self, x, y, width, height, text):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = text
+        self.font = font_big
+        self.color = (0, 255, 0)  # Green color for the button
+        self.hover_color = (0, 200, 0)  # Darker green when hovered
+
+    def draw(self):
+        # Change color on hover
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_x, mouse_y):
+            pygame.draw.rect(screen, self.hover_color, self.rect)
+        else:
+            pygame.draw.rect(screen, self.color, self.rect)
+        
+        # Draw the text on the button
+        draw_text(self.text, self.font, WHITE, self.rect.centerx - self.font.size(self.text)[0] // 2, self.rect.centery - self.font.size(self.text)[1] // 2)
+
+    def is_clicked(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        mouse_click = pygame.mouse.get_pressed()[0]
+        if self.rect.collidepoint(mouse_x, mouse_y) and mouse_click:
+            return True
+        return False
+
+
 
 #player instance
-bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+
+
+
 
 #create sprite groups
 platform_group = pygame.sprite.Group()
@@ -232,11 +275,24 @@ platform_group.add(platform)
 
 #game loop
 run = True
-while run:
+bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
+start_button = StartButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, 'START GAME')
 
+while run:
     clock.tick(FPS)
 
-    if game_over == False:
+    # If the game is in the "start screen" state, display the start button
+    if start_game:
+        # Use the bg_image (bgta) as the background
+        screen.blit(bg_image, (0, 0))  # Fill the screen with the background image
+        start_button.draw()  # Draw the start button
+
+        # If the button is clicked, start the game
+        if start_button.is_clicked():
+            start_game = False  # Transition to the game loop
+
+    # The main game loop (after start button is clicked)
+    elif not game_over:
         scroll = bitlandia.move()
 
         #draw background
@@ -259,12 +315,12 @@ while run:
             platform_group.add(platform)
 
             # Spawn score item
-            if score > 200 and not p_moving and random.randint(1, 5) == 1:
+            if score > 500 and not p_moving and random.randint(1, 2) == 1:
                 item = Item(p_x + p_w // 2, p_y - 10)
                 item_group.add(item)
 
             # Spawn super jump item
-            if score > 200 and not p_moving and random.randint(1, 5) == 1:
+            if score > 500 and not p_moving and random.randint(1, 2) == 1:
                 super_jump_item = SuperJumpItem(p_x + p_w // 2, p_y - 10)
                 super_jump_group.add(super_jump_item)
 
@@ -275,18 +331,20 @@ while run:
         item_group.update(scroll)
         super_jump_group.update(scroll)
 
-        #check for item collection
+        # Check for item collection
         for item in item_group:
             if bitlandia.rect.colliderect(item.rect):
                 score_multiplier = 2
                 multiplier_timer = 300
                 item.kill()
+                score_item_fx.play()  # Play the score item sound effect
 
-        #check for super jump collection
+        # Check for super jump collection
         for item in super_jump_group:
             if bitlandia.rect.colliderect(item.rect):
                 super_jump_active = True  # Activate super jump for one jump
                 item.kill()
+                super_jump_item_fx.play()  # Play the super jump sound effect
 
         #update multiplier timer
         if multiplier_timer > 0:
