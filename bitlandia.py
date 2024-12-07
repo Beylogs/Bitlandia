@@ -5,7 +5,6 @@ import os
 from spritesheet import SpriteSheet
 from enemy import Enemy
 
-
 #initialize pygame
 pygame.init()
 
@@ -59,11 +58,9 @@ font_big = pygame.font.SysFont('Lucida Sans', 24)
 bitlandia_image = pygame.image.load('assets/images/character/run/character_berie_run_1.png').convert_alpha()
 bg_image = pygame.image.load('assets/images/background/Bg.png').convert_alpha()
 platform_image = pygame.image.load('assets/images/platform/tilemap2.png').convert_alpha()
-
 #bird spritesheet
 bird_sheet_img = pygame.image.load('assets/images/enemy/bird.png').convert_alpha()
 bird_sheet = SpriteSheet(bird_sheet_img)
-
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -144,11 +141,8 @@ class Player():
 
         return scroll
 
-	def draw(self):
-		screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
-		pygame.draw.rect(screen, WHITE, self.rect, 2)
-		
-  
+    def draw(self):
+        screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
 
 #platform class
 class Platform(pygame.sprite.Sprite):
@@ -181,23 +175,15 @@ class Platform(pygame.sprite.Sprite):
         if self.rect.top > SCREEN_HEIGHT:
             self.kill()
 
-
 #player instance
-
 bitlandia = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 
 #create sprite groups
 platform_group = pygame.sprite.Group()
-
 enemy_group = pygame.sprite.Group()
 
 #create starting platform
 platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
-
-
-#create starting platform
-platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
-
 platform_group.add(platform)
 
 #game loop
